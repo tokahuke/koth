@@ -19,7 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from koth.arena.harness import Run, Study
-from koth.arena.main import ENTITIES, INK, MUTED
+from koth.arena.main import COLORS, GREY, INK, MUTED
 
 STUDY = Path(sys.argv[1] if len(sys.argv) > 1 else "data/misspecified_sigma.pkl")
 OUT = Path(__file__).with_suffix(".png")
@@ -39,11 +39,11 @@ by_policy: dict[str, list[Run]] = {}
 for run in study.runs:
     by_policy.setdefault(run.policy, []).append(run)
 
-# Labels are `<strategy>_x<factor>` by the spec's convention.
+# Contestants are named `<figure label> x<factor>` by the spec.
 curves: dict[str, list[tuple[float, float, float]]] = {}
 
 for label, runs in by_policy.items():
-    strategy, _, factor = label.rpartition("_x")
+    strategy, _, factor = label.rpartition(" x")
     mean, ci = mean_ci([r.regret for r in runs])
     curves.setdefault(strategy, []).append((float(factor), mean, ci))
 
@@ -54,8 +54,8 @@ for strategy, points in curves.items():
     factors = [f for f, _, _ in points]
     means = [m for _, m, _ in points]
     cis = [c for _, _, c in points]
-    label, color = ENTITIES.get(strategy, (strategy, "#8a93a1"))
-    ax.plot(factors, means, marker="o", color=color, label=label)
+    color = COLORS.get(strategy, GREY)
+    ax.plot(factors, means, marker="o", color=color, label=strategy)
     ax.fill_between(
         factors,
         [m - c for m, c in zip(means, cis)],

@@ -85,7 +85,7 @@ to reproduce it (seeds are fixed, ~11 min on 4 cores):
 ```
 pip install koth[arena]
 koth-arena simulate --spec resources/arena_independent12.spec.yaml
-koth-arena plot data/independent12.pkl
+koth-arena plot data/independent12.pkl --out resources/arena_independent12.png
 ```
 
 Some notes:

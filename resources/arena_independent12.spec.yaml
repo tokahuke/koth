@@ -9,8 +9,8 @@ params:
   arms: 12
 workers: 4
 contestants:
-  Koth3: Koth3
-  Koth2: Koth2
-  Gittins: Gittins
-  ProbabilityMatching: ProbabilityMatching
-  Elimination: Elimination
+  koth, k = 3: Koth3
+  koth, k = 2: Koth2
+  Gittins index: Gittins
+  Thompson sampling: ProbabilityMatching
+  z-test at 5%: Elimination

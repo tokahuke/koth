@@ -301,15 +301,22 @@ def _paired(
         print(f"{name:<22} {mean:>12.1f} {ci:>9.1f} {loose:>12.1f} {needed:>12.0f}")
 
 
-ENTITIES: dict[str, tuple[str, str]] = {
-    "Koth3": ("koth, k = 3", "#2a78d6"),
-    "Koth2": ("koth, k = 2", "#7aa8e0"),
-    "ProbabilityMatching": ("Thompson sampling", "#eb6834"),
-    "Gittins": ("Gittins index", "#1baf7a"),
-    "Elimination": ("z-test at 5%", "#eda100"),
-    "ExploreThenCommit": ("explore-then-commit", "#e87ba4"),
+COLORS: dict[str, str] = {
+    "koth, k = 3": "#2a78d6",
+    "koth, k = 2": "#7aa8e0",
+    "Thompson sampling": "#eb6834",
+    "Gittins index": "#1baf7a",
+    "z-test at 5%": "#eda100",
+    "explore-then-commit": "#e87ba4",
 }
-"""Label and colour per strategy: colour follows the entity, never its rank."""
+"""
+Colour per contestant name, which is the figure label verbatim (a spec names
+its contestants the way the figure should read); anything else is grey. Colour
+follows the entity, never its rank.
+"""
+
+GREY = "#8a93a1"
+"""The colour of a contestant `COLORS` does not know."""
 
 INK, MUTED = "#1a1f26", "#5b6472"
 """Text tokens: values and labels wear ink, never the series colour."""
@@ -349,8 +356,7 @@ def plot(runs: Path, out: Path | None) -> None:
     ranked = sorted(
         by_policy, key=lambda name: mean_ci([r.regret for r in by_policy[name]])[0]
     )
-    labels = [ENTITIES.get(name, (name, "#8a93a1"))[0] for name in ranked]
-    colors = [ENTITIES.get(name, (name, "#8a93a1"))[1] for name in ranked]
+    colors = [COLORS.get(name, GREY) for name in ranked]
     panels = {
         "discounted regret  (lower is better)": [
             mean_ci([r.regret for r in by_policy[n]]) for n in ranked
@@ -385,7 +391,7 @@ def plot(runs: Path, out: Path | None) -> None:
                 color=INK,
             )
         ax.set_yticks(y)
-        ax.set_yticklabels(labels, fontsize=10, color=INK)
+        ax.set_yticklabels(ranked, fontsize=10, color=INK)
         ax.set_title(title, fontsize=11, color=INK, loc="left")
         ax.set_xlim(0, 1.12 * span)
         ax.tick_params(colors=MUTED, labelsize=8)
@@ -409,7 +415,7 @@ def plot(runs: Path, out: Path | None) -> None:
         "allocation not on the true best arm, discounted the same way; a whole epoch "
         "on a loser counts one.",
         fontsize=8,
-        color="#8a93a1",
+        color=GREY,
         va="top",
         linespacing=1.45,
     )
