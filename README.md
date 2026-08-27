@@ -74,12 +74,12 @@ Good question. We have an _arena_ for exactly that: backtesting strategies. Let'
 
 "Good" here means time-discounted regret: how much less "money" I make with my strategy vs. a crystal ball. Nobody beats a crystal ball, but we can get close. Here are the numbers for some reasonable parameters:
 
-![12 independent arms, 2000 tests: regret and allocation on losing arms per strategy](resources/arena_independent12.png)
+![12 independent arms, 2000 tests: regret and allocation on losing arms per strategy](https://raw.githubusercontent.com/tokahuke/koth/main/resources/arena_independent12.png)
 
 Every strategy plays the same 2000 random tests: 12 arms, true effects drawn
 from `N(0, 0.5)`, noise `sigma = 1` per epoch, `gamma = 0.99` (so `1/rho = 100`
 epochs) over 500 epochs, and nobody is told the effect distribution. The spec
-is [`resources/arena_independent12.spec.yaml`](resources/arena_independent12.spec.yaml);
+is [`resources/arena_independent12.spec.yaml`](https://github.com/tokahuke/koth/blob/main/resources/arena_independent12.spec.yaml);
 to reproduce it (seeds are fixed, ~11 min on 4 cores):
 
 ```
