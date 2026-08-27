@@ -1,0 +1,61 @@
+[project]
+name = "koth"
+version = "0.1.0"
+description = "King of the Hill: performant A/B/n testing beyond the basics"
+authors = [
+    {name = "Pedro Arruda", email = "pedrobittencourt3@gmail.com"}
+]
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+keywords = ["ab-testing", "bandits", "multi-armed-bandit", "experimentation", "bayesian", "hjb"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+dependencies = [
+    "numpy (>=2.0,<3.0)",
+    "scipy (>=1.14,<2.0)",
+]
+
+[project.optional-dependencies]
+torch = [
+    "torch (>=2.9.0,<3.0.0)",
+]
+arena = [
+    "torch (>=2.9.0,<3.0.0)",
+    "click (>=8.4.2,<9.0.0)",
+    "pyyaml (>=6.0.3,<7.0.0)",
+    "matplotlib (>=3.9,<4.0)",
+]
+
+[project.urls]
+Homepage = "https://github.com/tokahuke/koth"
+Repository = "https://github.com/tokahuke/koth"
+Issues = "https://github.com/tokahuke/koth/issues"
+Math = "https://github.com/tokahuke/pinn"
+
+[project.scripts]
+koth-arena = "koth.arena.main:cli"
+
+[tool.poetry]
+exclude = ["koth/_weights/*.check.npz"]
+
+[tool.poetry.group.dev.dependencies]
+black = "*"
+
+[tool.black]
+target-version = ["py312"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
