@@ -1,0 +1,25 @@
+name: publish
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install poetry
+      - name: tag matches the version
+        run: test "v$(poetry version --short)" = "$GITHUB_REF_NAME"
+      - run: poetry install
+      - run: poetry run python -m koth
+      - run: poetry build
+      - uses: pypa/gh-action-pypi-publish@release/v1

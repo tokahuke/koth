@@ -1,0 +1,44 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install poetry
+      - uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py3.12-${{ hashFiles('poetry.lock') }}
+      - run: poetry install --extras "torch arena"
+      - run: poetry run black --check koth tools
+      - name: self-checks
+        run: |
+          for module in \
+            koth \
+            koth.numpy_.two_arm koth.numpy_.three_arm koth.numpy_.decide koth.numpy_.state \
+            koth.torch_.two_arm koth.torch_.three_arm koth.torch_.decide koth.torch_.state \
+            koth.arena.harness koth.arena.policies.n_arm koth.arena.policies.koth koth.arena.spec
+          do
+            poetry run python -m "$module"
+          done
+
+  numpy-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pipx install poetry
+      - run: poetry install
+      - run: poetry run python -c "import koth, koth.numpy_.decide, sys; assert 'torch' not in sys.modules"
+      - run: poetry run python -m koth
