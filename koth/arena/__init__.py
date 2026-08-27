@@ -4,6 +4,13 @@ regret against an oracle, and the strategies. Core in harness.py, strategies in
 policies/. Needs the `arena` extra (torch).
 """
 
+try:
+    import torch
+except ImportError as e:
+    e.add_note("consider using the koth[arena] extra")
+
+    raise
+
 from .harness import (
     Bayesian,
     Environment,
