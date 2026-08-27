@@ -354,7 +354,7 @@ def plot(runs: Path, out: Path | None, drop: tuple[str, ...]) -> None:
         "discounted regret  (lower is better)": [
             mean_ci([r.regret for r in by_policy[n]]) for n in ranked
         ],
-        "discounted traffic sent to losing arms  (lower is better)": [
+        "discounted allocation to losing arms  (lower is better)": [
             mean_ci([r.off_best for r in by_policy[n]]) for n in ranked
         ],
     }
@@ -405,7 +405,7 @@ def plot(runs: Path, out: Path | None, drop: tuple[str, ...]) -> None:
         f"Regret: profit left on the table vs an oracle that picks the winner from "
         f"epoch one, discounted at gamma = {study.params.gamma} over "
         f"{study.params.horizon} epochs.\nLosing arms: the share of each epoch's "
-        "traffic not on the true best arm, discounted the same way; a whole epoch "
+        "allocation not on the true best arm, discounted the same way; a whole epoch "
         "on a loser counts one.",
         fontsize=8,
         color="#8a93a1",

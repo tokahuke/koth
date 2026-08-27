@@ -30,7 +30,7 @@ class State(state.State[Tensor]):
         return cls(mean, torch.diag_embed(var))
 
     @override
-    def observe(self, estimate: Tensor, precision: Tensor) -> Self:
+    def update(self, estimate: Tensor, precision: Tensor) -> Self:
         estimate = estimate.broadcast_to(self.mean.shape)
         precision = precision.broadcast_to(self.mean.shape)
         information = torch.linalg.inv(self.cov) + torch.diag_embed(precision)
@@ -78,8 +78,8 @@ if __name__ == "__main__":
         design = torch.rand(4, 3, generator=generator, dtype=torch.float64)
         design[:, 2] = 0.0
         filter_.observe((estimate, design))
-        belief = belief.observe(estimate, design / params.sigma**2)
-        numpy_belief = numpy_belief.observe(
+        belief = belief.update(estimate, design / params.sigma**2)
+        numpy_belief = numpy_belief.update(
             estimate.numpy(), (design / params.sigma**2).numpy()
         )
     assert torch.allclose(belief.mean, filter_.mean) and torch.allclose(
@@ -88,4 +88,5 @@ if __name__ == "__main__":
     assert np.allclose(numpy_belief.mean, filter_.mean.numpy())
     assert np.allclose(numpy_belief.cov, belief.cov.numpy())
     assert State.flat(3, 10.0).cov[1, 1] == 100.0
+
     print("state on torch: matches the arena filter and numpy over 5 epochs")

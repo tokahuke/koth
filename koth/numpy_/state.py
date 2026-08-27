@@ -27,7 +27,7 @@ class State(state.State[np.ndarray]):
         return cls(mean, var[..., None] * np.eye(mean.shape[-1]))
 
     @override
-    def observe(self, estimate: np.ndarray, precision: np.ndarray) -> Self:
+    def update(self, estimate: np.ndarray, precision: np.ndarray) -> Self:
         estimate = np.broadcast_to(np.asarray(estimate, float), self.mean.shape)
         precision = np.broadcast_to(np.asarray(precision, float), self.mean.shape)
         information = np.linalg.inv(self.cov) + precision[..., None] * np.eye(self.arms)
@@ -49,13 +49,13 @@ if __name__ == "__main__":
 
     # Independent arms: observing everything at huge precision lands on the estimate.
     prior = State.independent([0.0, 1.0, 2.0], [4.0, 4.0, 4.0])
-    sharp = prior.observe([5.0, 6.0, 7.0], 1e9)
+    sharp = prior.update([5.0, 6.0, 7.0], 1e9)
     assert np.allclose(sharp.mean, [5.0, 6.0, 7.0]) and np.allclose(
         sharp.cov, 0.0, atol=1e-8
     )
 
     # One arm, precision q: the textbook scalar update, the others untouched.
-    once = prior.observe([5.0, 0.0, 0.0], [1.0, 0.0, 0.0])
+    once = prior.update([5.0, 0.0, 0.0], [1.0, 0.0, 0.0])
     assert np.isclose(once.mean[0], (0.0 / 4.0 + 5.0) / (1.0 / 4.0 + 1.0))
     assert np.isclose(once.cov[0, 0], 1.0 / (1.0 / 4.0 + 1.0))
     assert np.allclose(once.mean[1:], prior.mean[1:]) and np.allclose(
@@ -67,13 +67,14 @@ if __name__ == "__main__":
     # cov11 - cov01**2 / cov00.
     cov = np.array([[4.0, 1.0], [1.0, 2.0]])
     joint = State(np.array([0.0, 1.0]), cov)
-    told = joint.observe([2.0, 0.0], [1e12, 0.0])
+    told = joint.update([2.0, 0.0], [1e12, 0.0])
     assert np.isclose(told.mean[1], 1.0 + 1.0 / 4.0 * 2.0)
     assert np.isclose(told.cov[1, 1], 2.0 - 1.0 / 4.0)
 
     # Batched over a leading axis.
-    batch = State.independent(np.zeros((5, 3)), np.ones((5, 3))).observe(
+    batch = State.independent(np.zeros((5, 3)), np.ones((5, 3))).update(
         np.ones((5, 3)), 1.0
     )
     assert batch.mean.shape == (5, 3) and np.allclose(batch.mean, 0.5)
+
     print("state on numpy: ok")

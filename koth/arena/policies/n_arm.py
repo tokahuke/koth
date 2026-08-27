@@ -185,7 +185,7 @@ def demo() -> None:
     assert etc.committed == 1 and etc.committed_at == optimal_deadline(0.999, 500)
     # Soft commit time is the commit epoch: 50/50 is worth 1, a vertex 0.
     assert abs(etc.precision_time - etc.committed_at) < 1e-6, etc.precision_time
-    # Off-best traffic: half of every exploring epoch at two arms, discounted,
+    # Off-best allocation: half of every exploring epoch at two arms, discounted,
     # none after committing to the winner.
     explored = 0.5 * (1.0 - 0.999**etc.committed_at) / (1.0 - 0.999)
     assert abs(etc.off_best - explored) < 1e-6, etc.off_best

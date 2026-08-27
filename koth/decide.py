@@ -25,7 +25,7 @@ class Decision(Generic[A]):
     """What to do this epoch, batched like the state it answers."""
 
     allocation: A
-    """Traffic share per arm, `(..., arms)`, a simplex row; a vertex is a commit."""
+    """Share per arm, `(..., arms)`, a simplex row; a vertex is a commit."""
 
     committed: A
     """The arm committed to, `(...)`, or -1 while the test is still running."""

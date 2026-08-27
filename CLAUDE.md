@@ -4,7 +4,7 @@
 
 `koth` (king of the hill): the PyPI package for the top-k allocation heuristic
 (k = 2, 3) for A/B/n tests with correlated arms. It decides how to split
-traffic, not when to stop: stopping is an opportunity-cost question and it is
+the allocation, not when to stop: stopping is an opportunity-cost question and it is
 not modelled here. Never describe it as a stopping rule. The research side -- the PINNs that produced the
 nets, the derivations, the graveyards -- lives in the sibling `pinn` repo and
 is NOT a dependency: nothing here imports `pinn`. Code may be copied from it.

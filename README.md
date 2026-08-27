@@ -4,7 +4,7 @@
 ![Python](https://img.shields.io/badge/python-3.12%2B-blue)
 ![License](https://img.shields.io/badge/license-Apache--2.0-green)
 
-King of the hill: how to split traffic in an A/B/n test with correlated arms,
+King of the hill: how to allocate among the arms of an A/B/n test with correlated arms,
 decided on the top-k contenders (k = 2, 3).
 
 ```
@@ -17,18 +17,22 @@ pip install koth[arena]     # plus the benchmark arena
 import numpy as np
 import koth
 
-# A control and two treatments, one epoch = one day. Your posterior over the
-# arms' effects, in your units (here: lift per visit).
-mean = np.array([0.0, 3.0, 2.0])
-cov = np.diag([9.0, 10.0, 9.5])
+# A control and two treatments, one epoch = one day. What each arm measured
+# per day, and the share of the allocation it had that day: five days at an
+# even split (synthetic here; yours come from your data).
+rng = np.random.default_rng(5)
+allocations = np.full((5, 3), 1 / 3)
+outcomes = np.array([0.0, 3.0, 2.0]) + rng.normal(size=(5, 3)) * 30.0 / np.sqrt(allocations)
 
-test = koth.Test(rho=0.01, sigma=30.0)        # 1/rho = 100 days; sigma = one day's noise at full traffic
-decision = test.decide(koth.State(mean, cov))  # k = 2 or 3, min(3, arms) by default
+test = koth.Test(rho=0.01, sigma=30.0)  # 1/rho = 100 days; sigma = one day's noise at full allocation
+initial = koth.State.flat(arms=3, std=100.0)    # initial state: "uninformed 
+state = test.observe(initial, outcomes, allocations)
+decision = test.decide(state)           # k = 2 or 3, min(3, arms) by default
 
-decision.allocation   # [0.   0.634 0.366]: traffic share per arm; a vertex is a commit
+decision.allocation   # [0.24 0.51 0.25]: share per arm; a vertex is a commit
 decision.committed    # -1: no commit yet (else the arm's index)
 decision.contenders   # [0 1 2]: the k arms in play
-decision.value        # 319.7: value of continuing, in the units of `mean`
+decision.value        # 2044.0: value of continuing, in the units of the outcomes
 ```
 
 
@@ -37,11 +41,11 @@ decision.value        # 319.7: value of continuing, in the units of `mean`
 ### What is even the problem?
 
 A/B testing is hard because of the [exploration-exploitation dilemma](https://en.wikipedia.org/wiki/Exploration%E2%80%93exploitation_dilemma): every
-visitor you send to a variant in order to learn about it is a visitor you did not
-send to the variant you currently believe is best. It is about the money, not
+observation you spend on an arm in order to learn about it is one you did not
+spend on the arm you currently believe is best. It is about the money, not
 about being right, so hypothesis testing, the naive thing people reach for, is
-not the right tool: a p-value says whether an effect is there, not what to do
-with the next visitor.
+not the right tool: a p-value says whether an effect is there, not how much of
+the allocation each arm deserves.
 
 Targeted solutions do exist: Thompson sampling is a heuristic that works (easy, generalizable, decent performance), but it explores too much. If your arms are _independent_, the Gittins index is known to be the optimal strategy. However that's not always the case:
 
@@ -70,7 +74,7 @@ Good question. We have an _arena_ for exactly that: backtesting strategies. Let'
 
 "Good" here means time-discounted regret: how much less "money" I make with my strategy vs. a crystal ball. Nobody beats a crystal ball, but we can get close. Here are the numbers for some reasonable parameters:
 
-![12 independent arms, 2000 tests: regret and traffic on losing arms per strategy](resources/arena_independent12.png)
+![12 independent arms, 2000 tests: regret and allocation on losing arms per strategy](resources/arena_independent12.png)
 
 Every strategy plays the same 2000 random tests: 12 arms, true effects drawn
 from `N(0, 0.5)`, noise `sigma = 1` per epoch, `gamma = 0.99` (so `1/rho = 100`
@@ -99,7 +103,7 @@ Some notes:
 
 * Where do `mean` and `cov` come from? From _you_: they are your posterior over the arms' _effects_ (control included), in whatever units your metric has (koth never sees your raw data). For the common shared-control case, that is just one mean and one variance per arm, `cov = diag(var)`: the correlation between _lifts_ (every lift shares the control's noise) is derived by koth from the control's variance, you do not enter it. If you have a prior from past tests (empirical Bayes, correlated or not), `cov` is exactly where it goes.
 
-* What is `sigma`? And my arms have different noise levels! `sigma` is the noise of one arm's estimate over one epoch at full traffic, and it is the _same_ for every arm. That is not laziness: the inner maximization is a quadratic only because `sigma**2` factors out of the observation covariance. Conversion rates are within a few percent of this (`p(1 - p)` barely moves between arms). Revenue-vs-conversion arms are a different problem, not a parameter.
+* What is `sigma`? And my arms have different noise levels! `sigma` is the noise of one arm's estimate over one epoch at full allocation, and it is the _same_ for every arm. That is not laziness: the inner maximization is a quadratic only because `sigma**2` factors out of the observation covariance. Conversion rates are within a few percent of this (`p(1 - p)` barely moves between arms). Revenue-vs-conversion arms are a different problem, not a parameter.
 
 * My metric is a conversion rate, not Gaussian! The Gaussian is on your _posterior of the rate_, not on the clicks. After a few conversions per arm, that is a fine, if crude approximation. Below that, for sparse data, this indeed might not be the package for you.
 

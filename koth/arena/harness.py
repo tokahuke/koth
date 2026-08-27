@@ -122,7 +122,7 @@ class Run:
     committed_at: int | None = None
     off_best: float = 0.0
     """
-    Traffic sent to arms other than the epoch's true best, discounted at the
+    Allocation sent to arms other than the epoch's true best, discounted at the
     environment's gamma like `regret`: a vertex on a loser counts one epoch, an
     even split of N arms (N - 1) / N, a vertex on the winner zero. Regret with
     unit gaps, which counts an index policy's switching where `precision_time`

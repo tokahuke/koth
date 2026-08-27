@@ -1,6 +1,6 @@
 """
-A joint Gaussian belief over the arm effects, and the ways to build and update
-one. This module is the contract; each backend implements it in its own realm
+A joint Gaussian belief over the arm effects, and the ways to build one. This
+module is the contract; each backend implements it in its own realm
 (`numpy_.state`, `torch_.state`), and `koth.State` is the numpy one.
 """
 
@@ -52,10 +52,9 @@ class State(ABC, Generic[A]):
         """Per-arm estimates with their variances, `(..., arms)` each, uncorrelated."""
 
     @abstractmethod
-    def observe(self, estimate: A, precision: A) -> Self:
+    def update(self, estimate: A, precision: A) -> Self:
         """
-        The belief after one epoch's evidence: `estimate[i]` for arm i at
-        `precision[i]` (for `n` visitors with outcome sd `s`, `n / s**2`; 0 means
-        not observed). The conjugate update in information form, so a correlated
-        prior moves the unobserved arms too.
+        The belief after an estimate per arm, `(..., arms)`, at a precision per
+        arm, `(..., arms)`, 0 for an arm without one. `Test.observe` builds these
+        from a series of outcomes; this is the step underneath.
         """

@@ -62,4 +62,29 @@ if __name__ == "__main__":
         raise AssertionError("shape mismatch")
     except ValueError:
         pass
-    print("koth: units and validation ok, numpy only")
+    # Test.observe: each reading weighs allocation / sigma**2, so a run of epochs
+    # is the precision-weighted mean at the summed weight; all at once equals one
+    # epoch at a time, and an arm at allocation 0 is untouched.
+    test = Test(rho=0.01, sigma=2.0)
+    outcomes = rng.normal(size=(6, 3))
+    allocations = rng.dirichlet(np.ones(3), size=6)
+    allocations[:, 2] = 0.0
+    prior = State.flat(3, 100.0)
+    at_once = test.observe(prior, outcomes, allocations)
+    weight = allocations.sum(0)
+    expected = State.flat(3, 100.0).update(
+        (allocations * outcomes).sum(0) / np.where(weight > 0, weight, 1.0),
+        weight / 4.0,
+    )
+    assert np.allclose(at_once.mean, expected.mean) and np.allclose(
+        at_once.cov, expected.cov
+    )
+    assert at_once.cov[2, 2] == prior.cov[2, 2] and at_once.mean[2] == 0.0
+    stepwise = prior
+
+    for t in range(6):
+        stepwise = test.observe(stepwise, outcomes[t : t + 1], allocations[t : t + 1])
+    assert np.allclose(stepwise.mean, at_once.mean) and np.allclose(
+        stepwise.cov, at_once.cov
+    )
+    print("koth: units, validation and observe ok, numpy only")

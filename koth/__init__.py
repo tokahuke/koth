@@ -1,5 +1,5 @@
 """
-King of the hill: the top-k traffic-allocation heuristic for A/B/n tests with
+King of the hill: the top-k allocation heuristic for A/B/n tests with
 correlated arms.
 
     test = koth.Test(rho=0.001, sigma=450.0)
@@ -33,7 +33,10 @@ class Test(Generic[A]):
     """
 
     rho: float
-    """Discount rate per epoch."""
+    """
+    Discount rate per epoch, your time preference: `1 / rho` is the number of
+    epochs after which a result is worth 37% of one today. Not a deadline.
+    """
 
     sigma: float
     """Noise scale of one arm's estimate over one epoch at full allocation."""
@@ -72,6 +75,18 @@ class Test(Generic[A]):
         decision = self.decider.decide(chart, k)
 
         return replace(decision, value=decision.value * mean_scale / self.rho)
+
+    def observe(self, state: AnyState[A], outcomes: A, allocations: A) -> AnyState[A]:
+        """
+        The belief after a run of epochs: `outcomes[t, i]` is arm i's metric in
+        epoch t as measured, `allocations[t, i]` the share of the allocation it had
+        then (0 means no reading, and the value there is ignored). Both
+        `(epochs, arms)`; leading batch axes as on `state`.
+        """
+        weight = allocations.sum(-2)
+        estimate = (allocations * outcomes).sum(-2) / (weight + (weight == 0))
+
+        return state.update(estimate, weight / self.sigma**2)
 
 
 __all__ = ["Decision", "State", "Test"]
