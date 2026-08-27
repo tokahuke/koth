@@ -126,18 +126,25 @@ def simulate(
     classes = list(policies.ALL)
 
     # Contestants are the whole roster: each label runs the strategy it names,
-    # and nothing unnamed runs. An empty list keeps every strategy.
+    # with its other keys as class attributes, and nothing unnamed runs. An
+    # empty list keeps every strategy.
     if len(spec.contestants) > 0:
         by_name = {cls.__name__: cls for cls in classes}
         roster: list[type[Policy]] = []
 
         for label, entry in spec.contestants.items():
-            if entry not in by_name:
-                raise click.UsageError(
-                    f"contestant {label!r}: {entry!r} is not a strategy ({sorted(by_name)})"
-                )
+            name = entry.get("strategy")
 
-            roster.append(type(label, (by_name[entry],), {}))
+            if name not in by_name:
+                raise click.UsageError(
+                    f"contestant {label!r}: {name!r} is not a strategy ({sorted(by_name)})"
+                )
+            attributes = {
+                str(key).upper(): value
+                for key, value in entry.items()
+                if key != "strategy"
+            }
+            roster.append(type(label, (by_name[name],), attributes))
         classes = roster
     results: list[Run] = []
     total = size * len(classes)
@@ -316,12 +323,7 @@ INK, MUTED = "#1a1f26", "#5b6472"
     default=None,
     help="Where to write the figure; default beside the pickle, as .png.",
 )
-@click.option(
-    "--drop",
-    multiple=True,
-    help="A strategy to leave out of the figure (repeatable).",
-)
-def plot(runs: Path, out: Path | None, drop: tuple[str, ...]) -> None:
+def plot(runs: Path, out: Path | None) -> None:
     """
     The report as a figure: per policy, discounted regret and epochs spent
     exploring (the soft commit time), mean with its 95% CI, ordered by regret.
@@ -335,8 +337,7 @@ def plot(runs: Path, out: Path | None, drop: tuple[str, ...]) -> None:
     by_policy: dict[str, list[Run]] = {}
 
     for run in study.runs:
-        if run.policy not in drop:
-            by_policy.setdefault(run.policy, []).append(run)
+        by_policy.setdefault(run.policy, []).append(run)
 
     def mean_ci(values: list[float]) -> tuple[float, float]:
         """The mean and its 95% half-width, normal approximation."""

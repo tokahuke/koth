@@ -57,6 +57,17 @@ is NOT a dependency: nothing here imports `pinn`. Code may be copied from it.
   another problem.
 - `tools/from_pinn.py` exports weights and fixtures; it runs in pinn's venv,
   never here.
+- `docs/` holds ANALYSES linked from the README, one per name: the spec that
+  produced the sweep (`<name>.spec.yaml`), the script that draws it
+  (`<name>.py`, reads the pickle from gitignored `data/`), the figure
+  (`<name>.png`) and the write-up (`<name>.md`). It is human-facing and not
+  a knowledge base: no derivations, no graveyards, no agent notes there.
+  `resources/` holds what the README itself embeds.
+- A spec contestant is `{strategy: Name, key: value, ...}`; every extra key
+  becomes an uppercased class attribute on that contestant's subclass
+  (`sigma_factor: 0.5` sets `Bayesian.SIGMA_FACTOR`, the policy's belief
+  about sigma as a multiple of the truth). Misspecification studies are
+  spec files, not code.
 - Every module carries an `assert`-based self-check: `poetry run python -m
   koth` (units), `-m koth.numpy_.two_arm` / `.three_arm` / `.decide` / `.state`,
   the same four under `koth.torch_`, and `koth.arena.harness`,

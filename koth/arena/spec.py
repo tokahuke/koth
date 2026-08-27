@@ -36,9 +36,13 @@ class ArenaSpec:
     device: str = "cpu"
     """Torch device for the batched simulation."""
 
-    contestants: dict[str, str] = field(default_factory=dict)
-    """The complete roster when nonempty, report label -> strategy name.
-    Nothing unnamed runs. Empty sweeps every strategy."""
+    contestants: dict[str, dict[str, object]] = field(default_factory=dict)
+    """
+    The complete roster when nonempty, report label -> `{strategy: Name, ...}`,
+    every other key a class attribute set on that strategy for this contestant,
+    uppercased (`sigma_factor: 0.5` sets `SIGMA_FACTOR`). A bare name is
+    `{strategy: Name}`. Nothing unnamed runs. Empty sweeps every strategy.
+    """
 
     @classmethod
     def load(cls, path: Path) -> Self:
@@ -55,7 +59,11 @@ class ArenaSpec:
             workers=int(raw["workers"]) if "workers" in raw else None,
             device=str(raw.get("device", "cpu")),
             contestants={
-                str(name): str(entry)
+                str(name): (
+                    {"strategy": str(entry)}
+                    if isinstance(entry, str)
+                    else {str(key): value for key, value in entry.items()}
+                )
                 for name, entry in (raw.get("contestants") or {}).items()
             },
         )
@@ -105,11 +113,17 @@ if __name__ == "__main__":
             "workers: 4\n"
             "contestants:\n"
             "  ts: ProbabilityMatching\n"
+            "  koth_half: {strategy: Koth3, sigma_factor: 0.5}\n"
         )
         sweep = ArenaSpec.load(root / "sweep.yaml")
 
         assert sweep.params.horizon == 100 and sweep.params.eta == 0.0
-        assert sweep.workers == 4 and sweep.contestants["ts"] == "ProbabilityMatching"
+        assert sweep.workers == 4
+        assert sweep.contestants["ts"] == {"strategy": "ProbabilityMatching"}
+        assert sweep.contestants["koth_half"] == {
+            "strategy": "Koth3",
+            "sigma_factor": 0.5,
+        }
 
         sweep.save(root / "back.yaml")
         written = (root / "back.yaml").read_text()

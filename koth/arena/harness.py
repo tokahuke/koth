@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from torch import Tensor
-from typing import Self, override
+from typing import ClassVar, Self, override
 
 
 @dataclass
@@ -375,9 +375,13 @@ class Bayesian(Policy):
     (reps, arms) `mean` and `precision`, forecast-then-update. Under `eta = 0` and a
     flat prior it is the conjugate normal posterior; with drift, precision erodes as
     `p / (1 + eta^2 p)` before each update, so a flat start needs no special case.
-    `sigma` and `eta` are the *policy's* beliefs, the truth by `init` and
-    misspecified by constructing directly; `prior_precision` is per arm, 0 flat.
+    `sigma` and `eta` are the *policy's* beliefs: `init` sets `sigma` to
+    `SIGMA_FACTOR` times the truth, so a misspecified contestant is a subclass
+    with that attribute; `prior_precision` is per arm, 0 flat.
     """
+
+    SIGMA_FACTOR: ClassVar[float] = 1.0
+    """What the policy believes `sigma` is, as a multiple of the truth."""
 
     def __init__(
         self,
@@ -399,7 +403,7 @@ class Bayesian(Policy):
     @classmethod
     @override
     def init(cls, params: Params, reps: int, device: str) -> Self:
-        return cls(params, reps, device)
+        return cls(params, reps, device, sigma=cls.SIGMA_FACTOR * params.sigma)
 
     @override
     def observe(self, observation: tuple[Tensor, Tensor]) -> None:

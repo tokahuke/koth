@@ -1,0 +1,26 @@
+out: data/misspecified_sigma.pkl
+params:
+  gamma: 0.99
+  horizon: 500
+  sigma: 1.0
+  effect: 0.0
+  effect_std: 0.5
+  size: 2000
+  arms: 6
+workers: 4
+contestants:
+  Koth3_x0.25: {strategy: Koth3, sigma_factor: 0.25}
+  Koth3_x0.5: {strategy: Koth3, sigma_factor: 0.5}
+  Koth3_x1: {strategy: Koth3, sigma_factor: 1.0}
+  Koth3_x2: {strategy: Koth3, sigma_factor: 2.0}
+  Koth3_x4: {strategy: Koth3, sigma_factor: 4.0}
+  ProbabilityMatching_x0.25: {strategy: ProbabilityMatching, sigma_factor: 0.25}
+  ProbabilityMatching_x0.5: {strategy: ProbabilityMatching, sigma_factor: 0.5}
+  ProbabilityMatching_x1: {strategy: ProbabilityMatching, sigma_factor: 1.0}
+  ProbabilityMatching_x2: {strategy: ProbabilityMatching, sigma_factor: 2.0}
+  ProbabilityMatching_x4: {strategy: ProbabilityMatching, sigma_factor: 4.0}
+  Gittins_x0.25: {strategy: Gittins, sigma_factor: 0.25}
+  Gittins_x0.5: {strategy: Gittins, sigma_factor: 0.5}
+  Gittins_x1: {strategy: Gittins, sigma_factor: 1.0}
+  Gittins_x2: {strategy: Gittins, sigma_factor: 2.0}
+  Gittins_x4: {strategy: Gittins, sigma_factor: 4.0}

@@ -51,7 +51,7 @@ class Koth(Bayesian):
     @classmethod
     @override
     def init(cls, params: Params, reps: int, device: str) -> Self:
-        return cls(params, reps, device)
+        return cls(params, reps, device, sigma=cls.SIGMA_FACTOR * params.sigma)
 
     @override
     def propose(self) -> Tensor:

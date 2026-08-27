@@ -19,8 +19,10 @@ _HERMITE_NODES = 24
 class ExploreThenCommit(Bayesian):
     """Uniform to the deadline, then the posterior leader, however uncertain."""
 
-    def __init__(self, params: Params, reps: int, device: str, deadline: int) -> None:
-        super().__init__(params, reps, device)
+    def __init__(
+        self, params: Params, reps: int, device: str, sigma: float, deadline: int
+    ) -> None:
+        super().__init__(params, reps, device, sigma)
         self.deadline = deadline
 
     @classmethod
@@ -30,6 +32,7 @@ class ExploreThenCommit(Bayesian):
             params,
             reps,
             device,
+            sigma=cls.SIGMA_FACTOR * params.sigma,
             deadline=optimal_deadline(params.gamma, params.horizon),
         )
 

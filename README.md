@@ -85,13 +85,17 @@ to reproduce it (seeds are fixed, ~11 min on 4 cores):
 ```
 pip install koth[arena]
 koth-arena simulate --spec resources/arena_independent12.spec.yaml
-koth-arena plot data/independent12.pkl --drop ExploreThenCommit
+koth-arena plot data/independent12.pkl
 ```
 
 Some notes:
 * If Gittins is "optimal", why does it still lose? Well, Gittins is not optimal for this _simulation_ because of the _prior_. In this simulation, we don't tell strategies the range of effects we are sampling from. They have to start from somewhere "flat". This is more realistic: in "real life", the range is but a well-informed guess.
 * The numbers on the right are just a measure of of how much deliberate exploration each strategy took. This answers the "how much time?" question; the "money question" is still answered solely by regret.
 
+
+## More analyses
+
+* [Misjudging the noise](docs/misspecified_sigma.md): what a wrong `sigma` costs, for koth and for the baselines.
 
 ## Frequently asked questions
 

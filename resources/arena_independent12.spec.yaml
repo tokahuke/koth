@@ -8,3 +8,9 @@ params:
   size: 2000
   arms: 12
 workers: 4
+contestants:
+  Koth3: Koth3
+  Koth2: Koth2
+  Gittins: Gittins
+  ProbabilityMatching: ProbabilityMatching
+  Elimination: Elimination
