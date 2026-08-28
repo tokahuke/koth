@@ -55,7 +55,7 @@ if __name__ == "__main__":
     # Against the arena's Kalman filter, independent arms, no drift: the same
     # numbers epoch for epoch, on torch and on numpy.
     params = Params(
-        gamma=0.99, horizon=1, sigma=2.0, effect=0.0, effect_std=1.0, size=4, arms=3
+        gamma=0.99, horizon=1, sigma=2.0, effect=0.0, effect_std=1.0, arms=3
     )
 
     class Filter(Bayesian):

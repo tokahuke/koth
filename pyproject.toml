@@ -1,6 +1,6 @@
 [project]
 name = "koth"
-version = "0.1.0"
+version = "0.2.0"
 description = "King of the Hill: performant A/B/n testing beyond the basics"
 authors = [
     {name = "Pedro Arruda", email = "pedrobittencourt3@gmail.com"}

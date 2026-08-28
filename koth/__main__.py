@@ -87,4 +87,4 @@ if __name__ == "__main__":
     assert np.allclose(stepwise.mean, at_once.mean) and np.allclose(
         stepwise.cov, at_once.cov
     )
-    print("koth: units, validation and observe ok, numpy only")
+    print("KotH: units, validation and observe ok, numpy only")

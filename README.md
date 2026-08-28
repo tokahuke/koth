@@ -67,35 +67,43 @@ That's it! This works because:
 
 ### But how good is this really?
 
-Good question. We have an _arena_ for exactly that: backtesting strategies. Let's consider a simple example, say 12 _independent_ arms. The _best_ solution is known: Gittins Index\*. Here are the other contestants:
+Good question. We have an _arena_ for exactly that: backtesting strategies. Let's consider a simple example, say 6 _independent_ arms. The _best_ solution is known: Gittins Index\*. Here are the other contestants:
 * Thompson sampling (proportional allocation): allocate proportional to the probability of that arm being the best.
 * Z-test, sequential: drop arms when it's significantly dominated by another arm (with p < 5%).
 * King-of-the-hill based on exact 2 and 3 problems: our heuristic.
 
 "Good" here means time-discounted regret: how much less "money" I make with my strategy vs. a crystal ball. Nobody beats a crystal ball, but we can get close. Here are the numbers for some reasonable parameters:
 
-![12 independent arms, 2000 tests: regret and allocation on losing arms per strategy](https://raw.githubusercontent.com/tokahuke/koth/main/resources/arena_independent12.png)
+![6 independent arms, 1000 tests: regret and allocation on losing arms per strategy](https://raw.githubusercontent.com/tokahuke/koth/main/resources/arena.png)
 
-Every strategy plays the same 2000 random tests: 12 arms, true effects drawn
-from `N(0, 0.5)`, noise `sigma = 1` per epoch, `gamma = 0.99` (so `1/rho = 100`
-epochs) over 500 epochs, and nobody is told the effect distribution. The spec
-is [`resources/arena_independent12.spec.yaml`](https://github.com/tokahuke/koth/blob/main/resources/arena_independent12.spec.yaml);
-to reproduce it (seeds are fixed, ~11 min on 4 cores):
+Every strategy plays the same 1000 random tests: 6 arms, true effects drawn
+from `N(0, 0.5)`, noise `sigma = 1` per epoch, `gamma = 0.999` (so `1/rho = 1000`
+epochs) over 3000 epochs, and nobody is told the effect distribution. The spec
+is [`resources/arena.spec.yaml`](https://github.com/tokahuke/koth/blob/main/resources/arena.spec.yaml);
+to reproduce it (seeds are fixed, ~20 min on 4 cores):
 
 ```
 pip install koth[arena]
-koth-arena simulate --spec resources/arena_independent12.spec.yaml
-koth-arena plot data/independent12.pkl --out resources/arena_independent12.png
+koth-arena simulate --spec resources/arena.spec.yaml
+koth-arena plot data/arena.pkl --out resources/arena.png
 ```
 
 Some notes:
-* If Gittins is "optimal", why does it still lose? Well, Gittins is not optimal for this _simulation_ because of the _prior_. In this simulation, we don't tell strategies the range of effects we are sampling from. They have to start from somewhere "flat". This is more realistic: in "real life", the range is but a well-informed guess.
+* If Gittins is "optimal", why does it still lose by a sliver? Well, Gittins is not optimal for this _simulation_ because of the _prior_. In this simulation, we don't tell strategies the range of effects we are sampling from. They have to start from somewhere "flat". This is more realistic: in "real life", the range is but a well-informed guess.
 * The numbers on the right are just a measure of of how much deliberate exploration each strategy took. This answers the "how much time?" question; the "money question" is still answered solely by regret.
 
+That is for independent arms, where you would expect Gittins to work well. What about _correlated arms_? In the plot below, we simulated a "marketing campaing bid" by drawing uniform points from a _Gaussian process_ with ever increasing correlation between neighbourig bids:
+
+![6 bids on a ladder, profit a smooth function of the bid: regret against the smoothness, with and without the prior](https://raw.githubusercontent.com/tokahuke/koth/main/resources/bids.png)
+
+The full study, with the table and the spec that produced it: [docs/correlation/bids](docs/correlation/bids/README.md).
+
+Now one can see the KotH strategies clearly and decisively winning. It behaves like you expect: the more correlation, the better, since there is _less_ to learn. The other strategies (Gittins and "flat" KotH, i.e. with no information of the correlation) _degrade_ instead. TS improves because it can also take advantage of correlation. For more information, see the [full analysis](docs/correlation/README.md).
 
 ## More analyses
 
-* [Misjudging the noise](docs/misspecified_sigma.md): what a wrong `sigma` costs, for koth and for the baselines.
+* [Correlated arms](docs/correlation/README.md): the case the package exists for, arms whose effects are tied to each other and a prior that says how.
+* [Robustness](docs/robustness/README.md): what it costs when the world is not the model, for KotH and for the baselines: a wrong `sigma`, outliers, drift, and coarse Bernoulli data.
 
 ## Frequently asked questions
 
@@ -105,12 +113,12 @@ Some notes:
 
 * What about drift and parameter changes? You don't model those! They make the computed base models way more complex to train reliably. In addition, they are a "second order" problem. A simple solution you can make is to cap your input data to a reasonable horizon (i.e., recalibrate often). This should give you 80% of the real deal.
 
-* Where do `mean` and `cov` come from? From _you_: they are your posterior over the arms' _effects_ (control included), in whatever units your metric has (koth never sees your raw data). For the common shared-control case, that is just one mean and one variance per arm, `cov = diag(var)`: the correlation between _lifts_ (every lift shares the control's noise) is derived by koth from the control's variance, you do not enter it. If you have a prior from past tests (empirical Bayes, correlated or not), `cov` is exactly where it goes.
+* Where do `mean` and `cov` come from? From _you_: they are your posterior over the arms' _effects_ (control included), in whatever units your metric has (KotH never sees your raw data). For the common shared-control case, that is just one mean and one variance per arm, `cov = diag(var)`: the correlation between _lifts_ (every lift shares the control's noise) is derived by KotH from the control's variance, you do not enter it. If you have a prior from past tests (empirical Bayes, correlated or not), `cov` is exactly where it goes.
 
 * What is `sigma`? And my arms have different noise levels! `sigma` is the noise of one arm's estimate over one epoch at full allocation, and it is the _same_ for every arm. That is not laziness: the inner maximization is a quadratic only because `sigma**2` factors out of the observation covariance. Conversion rates are within a few percent of this (`p(1 - p)` barely moves between arms). Revenue-vs-conversion arms are a different problem, not a parameter.
 
 * My metric is a conversion rate, not Gaussian! The Gaussian is on your _posterior of the rate_, not on the clicks. After a few conversions per arm, that is a fine, if crude approximation. Below that, for sparse data, this indeed might not be the package for you.
 
-* How many arms can I throw at it? Which `k`? Each decision evaluates every `k`-subset: 12 arms is 66 pairs or 220 triples, 50 arms is 1,225 pairs or 19,600 triples. Koth3 is _cubic_ in arms while Koth2 is _quadratic_ (Koth4 would be _quartic_, yikes!). To add insult to injury, the underlying network for Koth3 is also way bigger than Koth2. Depending on what you are doing, Koth2 might just beat the tradeoff by quite a margin.
+* How many arms can I throw at it? Which `k`? Each decision evaluates every `k`-subset: 12 arms is 66 pairs or 220 triples, 50 arms is 1,225 pairs or 19,600 triples. KotH3 is _cubic_ in arms while KotH2 is _quadratic_ (Koth4 would be _quartic_, yikes!). To add insult to injury, the underlying network for KotH3 is also way bigger than KotH2. Depending on what you are doing, KotH2 might just beat the tradeoff by quite a margin.
 
 * Where is the math? In the [pinn](https://github.com/tokahuke/pinn) repo: `kb/` holds the derivations, and the graveyard of what did not work.

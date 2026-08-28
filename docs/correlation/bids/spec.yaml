@@ -1,0 +1,27 @@
+out: data/bids.pkl
+size: 1000
+workers: 2
+contestants:
+  KotH, k = 3: {strategy: KotH3, prior: world}
+  KotH, k = 2: {strategy: KotH2, prior: world}
+  Gittins index: {strategy: Gittins, prior: world}
+  Thompson sampling: {strategy: JointThompson, prior: world}
+  KotH, k = 3 (flat): KotH3
+  Gittins index (flat): Gittins
+# Six bids, profit a Matern-5/2 draw over them; the lengthscale (in bid steps)
+# is the smoothness and so the correlation: neighbours at 0.14, 0.52, 0.83 and
+# 0.95. Contestants with `prior: world` start from the world's law: KotH and
+# Thompson (by Monte Carlo on the joint posterior) whole, Gittins its diagonal.
+environments:
+  lengthscale 0.5: &base
+    kind: matern
+    lengthscale: 0.5
+    gamma: 0.999
+    horizon: 3000
+    sigma: 1.0
+    effect: 0.0
+    effect_std: 0.5
+    arms: 6
+  lengthscale 1: {<<: *base, lengthscale: 1.0}
+  lengthscale 2: {<<: *base, lengthscale: 2.0}
+  lengthscale 4: {<<: *base, lengthscale: 4.0}

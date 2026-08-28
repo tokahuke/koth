@@ -11,13 +11,16 @@ is NOT a dependency: nothing here imports `pinn`. Code may be copied from it.
 
 ## Hard rules
 
+- Spelling: `koth` (lowercase) only for the module, package, pip name and
+  CLI; `KotH` for the heuristic and the product in prose, and in class names
+  (`KotH`, `KotH2`, `KotH3`) and contestant labels (`KotH, k = 3`).
 - `numpy` and `scipy` are the only required dependencies. `import koth` must
   work with those alone; torch is the `torch` extra (a backend the numpy path must not need)
   and `arena` adds click and pyyaml on top of it.
 - The arena (`koth/arena/`, copied from pinn's) benchmarks policies on torch:
   `poetry run koth-arena simulate ... --arms N`, then `koth-arena analyze`
   (the table) and `koth-arena plot` (regret and epochs exploring per policy,
-  a PNG beside the pickle). The package enters as `Koth2`/`Koth3`
+  a PNG beside the pickle). The package enters as `KotH2`/`KotH3`
   (`policies/koth.py`: `Test` on the torch `Decider` over the filter's
   posterior, flattest-supported prior). Baselines: ETC, probability
   matching, elimination (z-test), Gittins (Brezzi-Lai index on the filter's
@@ -57,19 +60,50 @@ is NOT a dependency: nothing here imports `pinn`. Code may be copied from it.
   another problem.
 - `tools/from_pinn.py` exports weights and fixtures; it runs in pinn's venv,
   never here.
-- `docs/` holds ANALYSES linked from the README, one per name: the spec that
-  produced the sweep (`<name>.spec.yaml`), the script that draws it
-  (`<name>.py`, reads the pickle from gitignored `data/`), the figure
-  (`<name>.png`) and the write-up (`<name>.md`). It is human-facing and not
-  a knowledge base: no derivations, no graveyards, no agent notes there.
-  `resources/` holds what the README itself embeds.
+- `docs/` holds ANALYSES linked from the README, a chapter per folder
+  (`docs/robustness/`) with an index `README.md`, and ONE FOLDER PER STUDY
+  inside it: the write-up (`README.md`), the ONE spec that produced the
+  sweep (`spec.yaml`, its `environment` naming every world) and the figure
+  (`figure.png`, drawn by `koth-arena plot` from the pickle in gitignored
+  `data/`; several worlds draw regret-vs-world lines, one world draws bars).
+  No per-study scripts. It is human-facing and not a knowledge base: no
+  derivations, no graveyards, no agent notes there.
+- A spec has NO `params`: `environments` is a mapping of NAMED worlds, each
+  spelling out every `Params` field plus `kind` (`normal` when absent) and
+  that environment's own options; repetition is a YAML anchor on the first
+  world and `<<: *base` merges (PyYAML resolves them, `save` writes worlds in
+  full). `size` (tests per world) sits at the top level. Every contestant
+  plays every world, runs carry the world label, `Study.environments` keeps
+  each world's `Params` by label, and the label is the figure's axis text; an optional `told: {sigma: ...}`
+  on a world is what every strategy is told instead of the truth (the
+  per-world counterpart of a contestant's `sigma_factor`). Drift is `{<<: *base, eta: 0.01}`, outliers `{<<: *base, kind: student,
+  df: 3}`.
+- A contestant label `<name> x<value>` (`KotH, k = 3 x0.5`) is one point of
+  `<name>`'s curve at `<value>`: `plot` draws such a sweep as lines against
+  the value (log x over a decade or more), coloured by `<name>`, and the
+  spec writes the labels that way; a `<name> (flat)` label is that strategy
+  without a prior, drawn dashed in its colour. Worlds are the other line axis; plain
+  names in one world are bars.
 - A spec contestant is `{strategy: Name, key: value, ...}`; every extra key
   becomes an uppercased class attribute on that contestant's subclass
   (`sigma_factor: 0.5` sets `Bayesian.SIGMA_FACTOR`, the policy's belief
-  about sigma as a multiple of the truth). Misspecification studies are
-  spec files, not code.
+  about sigma as a multiple of the truth; `eta_factor: 0` a filter that
+  does not know the world drifts). Misspecification studies are spec
+  files, not code. Environments: `normal`, `student` (t noise at `df`,
+  variance matched), `ar1` (standardized noise with lag-one correlation
+  `phi`, variance matched), `bernoulli` (success rates at `rate + effect`
+  over `round(a_i * trials)` draws; its `describe` derives the `sigma` the
+  policies are told, `sqrt(rate (1 - rate) / trials)`, and a spec that
+  writes one is refused), `matern` (a bid ladder: arms at bids 0..N-1,
+  effects one GP draw with a Matern-5/2 kernel at `lengthscale`, no control).
+  A kind that fixes a `Params` field derives it in `describe`, never in the
+  spec. Every environment exposes `prior()`, its effect law as a Gaussian
+  over the arms; a contestant with `prior: world` is `prime`d with it after
+  `init`: `Bayesian` keeps the diagonal, `KotH` and `JointThompson` take it
+  whole on KotH's own full-covariance `State` (with the same drift step as
+  the per-arm filter). `docs/correlation/` is the chapter for that world.
 - Every module carries an `assert`-based self-check: `poetry run python -m
-  koth` (units), `-m koth.numpy_.two_arm` / `.three_arm` / `.decide` / `.state`,
+  KotH` (units), `-m koth.numpy_.two_arm` / `.three_arm` / `.decide` / `.state`,
   the same four under `koth.torch_`, and `koth.arena.harness`,
   `.policies.n_arm`, `.policies.koth`, `.spec`.
 - Final step of any Python change: `poetry run black <files>`.

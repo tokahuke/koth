@@ -1,19 +1,12 @@
 out: data/misspecified_sigma.pkl
-params:
-  gamma: 0.99
-  horizon: 500
-  sigma: 1.0
-  effect: 0.0
-  effect_std: 0.5
-  size: 2000
-  arms: 6
-workers: 4
+size: 1000
+workers: 2
 contestants:
-  koth, k = 3 x0.25: {strategy: Koth3, sigma_factor: 0.25}
-  koth, k = 3 x0.5: {strategy: Koth3, sigma_factor: 0.5}
-  koth, k = 3 x1.0: {strategy: Koth3, sigma_factor: 1.0}
-  koth, k = 3 x2.0: {strategy: Koth3, sigma_factor: 2.0}
-  koth, k = 3 x4.0: {strategy: Koth3, sigma_factor: 4.0}
+  KotH, k = 3 x0.25: {strategy: KotH3, sigma_factor: 0.25}
+  KotH, k = 3 x0.5: {strategy: KotH3, sigma_factor: 0.5}
+  KotH, k = 3 x1.0: {strategy: KotH3, sigma_factor: 1.0}
+  KotH, k = 3 x2.0: {strategy: KotH3, sigma_factor: 2.0}
+  KotH, k = 3 x4.0: {strategy: KotH3, sigma_factor: 4.0}
   Thompson sampling x0.25: {strategy: ProbabilityMatching, sigma_factor: 0.25}
   Thompson sampling x0.5: {strategy: ProbabilityMatching, sigma_factor: 0.5}
   Thompson sampling x1.0: {strategy: ProbabilityMatching, sigma_factor: 1.0}
@@ -24,3 +17,11 @@ contestants:
   Gittins index x1.0: {strategy: Gittins, sigma_factor: 1.0}
   Gittins index x2.0: {strategy: Gittins, sigma_factor: 2.0}
   Gittins index x4.0: {strategy: Gittins, sigma_factor: 4.0}
+environments:
+  normal: &base
+    gamma: 0.999
+    horizon: 3000
+    sigma: 1.0
+    effect: 0.0
+    effect_std: 0.5
+    arms: 6

@@ -1,0 +1,22 @@
+out: data/drift_unaware.pkl
+size: 1000
+workers: 2
+contestants:
+  KotH, k = 3: {strategy: KotH3, eta_factor: 0.0}
+  KotH, k = 2: {strategy: KotH2, eta_factor: 0.0}
+  Gittins index: {strategy: Gittins, eta_factor: 0.0}
+  Thompson sampling: {strategy: ProbabilityMatching, eta_factor: 0.0}
+  z-test at 5%: {strategy: Elimination, eta_factor: 0.0}
+environments:
+  eta 0: &base
+    gamma: 0.999
+    horizon: 3000
+    sigma: 1.0
+    effect: 0.0
+    effect_std: 0.5
+    arms: 6
+  eta 0.001: {<<: *base, eta: 0.001}
+  eta 0.003: {<<: *base, eta: 0.003}
+  eta 0.01: {<<: *base, eta: 0.01}
+  eta 0.03: {<<: *base, eta: 0.03}
+  eta 0.1: {<<: *base, eta: 0.1}

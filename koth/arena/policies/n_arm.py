@@ -20,9 +20,15 @@ class ExploreThenCommit(Bayesian):
     """Uniform to the deadline, then the posterior leader, however uncertain."""
 
     def __init__(
-        self, params: Params, reps: int, device: str, sigma: float, deadline: int
+        self,
+        params: Params,
+        reps: int,
+        device: str,
+        sigma: float,
+        eta: float,
+        deadline: int,
     ) -> None:
-        super().__init__(params, reps, device, sigma)
+        super().__init__(params, reps, device, sigma, eta)
         self.deadline = deadline
 
     @classmethod
@@ -33,6 +39,7 @@ class ExploreThenCommit(Bayesian):
             reps,
             device,
             sigma=cls.SIGMA_FACTOR * params.sigma,
+            eta=cls.ETA_FACTOR * params.eta,
             deadline=optimal_deadline(params.gamma, params.horizon),
         )
 
@@ -172,7 +179,6 @@ def demo() -> None:
             sigma=1.0,
             effect=0.0,
             effect_std=0.3,
-            size=1,
             arms=deltas.shape[1],
         )
         world = Normal(params, [0])
@@ -211,7 +217,7 @@ def demo() -> None:
     # The filter under drift: precision stops at the recursion's fixed point,
     # p/2 + sqrt(p^2/4 + p/eta^2) for a lump p per epoch.
     params = Params(
-        gamma=0.999, horizon=1, sigma=1.0, effect=0.0, effect_std=0.0, size=1, arms=2
+        gamma=0.999, horizon=1, sigma=1.0, effect=0.0, effect_std=0.0, arms=2
     )
     aware = ProbabilityMatching(params, 1, "cpu", sigma=1.0, eta=0.05)
     lump = torch.full((1, 2), 0.25, dtype=torch.float64)
